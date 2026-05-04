@@ -56,6 +56,12 @@ STORED_ENUM_MAP(stored_setup_style, header::ClassicStyle,
 	header::ModernStyle
 );
 
+STORED_ENUM_MAP(stored_dark_style, header::LightStyle,
+	header::LightStyle,
+	header::DarkStyle,
+	header::DynamicStyle
+);
+
 STORED_ENUM_MAP(stored_bool_auto_no_yes, header::Auto,
 	header::Auto,
 	header::No,
@@ -379,20 +385,55 @@ void header::load(std::istream & is, const version & version) {
 		small_image_back_color = 0;
 	}
 	
-	if(version >= INNO_VERSION(6, 0, 0)) {
+	if(version >= INNO_VERSION(6, 6, 0)) {
+		// Inno Setup 6.6.0 removed WizardStyle (the classic/modern toggle is
+		// gone) and added WizardDarkStyle (light/dark/dynamic) in its place,
+		// after the WizardSizePercentX/Y pair instead of before it. See
+		// TSetupHeader in Projects/Src/Shared.Struct.pas at tag is-6_6_0.
+		wizard_style = ModernStyle;
+		wizard_resize_percent_x = util::load<boost::uint32_t>(is);
+		wizard_resize_percent_y = util::load<boost::uint32_t>(is);
+		wizard_dark_style = stored_enum<stored_dark_style>(is).get();
+	} else if(version >= INNO_VERSION(6, 0, 0)) {
 		wizard_style = stored_enum<stored_setup_style>(is).get();
 		wizard_resize_percent_x = util::load<boost::uint32_t>(is);
 		wizard_resize_percent_y = util::load<boost::uint32_t>(is);
+		wizard_dark_style = LightStyle;
 	} else {
 		wizard_style = ClassicStyle;
 		wizard_resize_percent_x = 0;
 		wizard_resize_percent_y = 0;
+		wizard_dark_style = LightStyle;
 	}
 	
 	if(version >= INNO_VERSION(5, 5, 7)) {
 		image_alpha_format = stored_enum<stored_alpha_format>(is).get();
 	} else {
 		image_alpha_format = AlphaIgnored;
+	}
+	
+	if(version >= INNO_VERSION(6, 5, 2)) {
+		// Inno Setup 6.5.2 re-introduced WizardImageBackColor and
+		// WizardSmallImageBackColor as serialised header fields after
+		// WizardImageAlphaFormat; before 5.5.7 they sat much earlier
+		// in the struct (handled above).
+		image_back_color = util::load<boost::uint32_t>(is);
+		small_image_back_color = util::load<boost::uint32_t>(is);
+	}
+	if(version >= INNO_VERSION(6, 6, 0)) {
+		// 6.6.0 added the DynamicDark variants.
+		image_back_color_dynamic_dark = util::load<boost::uint32_t>(is);
+		small_image_back_color_dynamic_dark = util::load<boost::uint32_t>(is);
+	} else {
+		image_back_color_dynamic_dark = 0;
+		small_image_back_color_dynamic_dark = 0;
+	}
+	if(version >= INNO_VERSION(6, 6, 1)) {
+		// 6.6.1 added WizardImageOpacity (Byte). Default for older versions
+		// is fully opaque.
+		wizard_image_opacity = util::load<boost::uint8_t>(is);
+	} else {
+		wizard_image_opacity = 0xff;
 	}
 	
 	if(version >= INNO_VERSION(6, 4, 0)) {
@@ -742,10 +783,25 @@ header::flags header::load_flags(std::istream & is, const version & version) {
 	if(version >= INNO_VERSION(6, 0, 0)) {
 		flagreader.add(AppNameHasConsts);
 		flagreader.add(UsePreviousPrivileges);
+	}
+	if(version >= INNO_VERSION(6, 0, 0) && version < INNO_VERSION(6, 6, 0)) {
+		// Inno Setup 6.6.0 dropped shWizardResizable from
+		// TSetupHeaderOption (the wizard is unconditionally resizable in
+		// the new modern style; the four flags appended at the same
+		// position in the enum take its slot).
 		flagreader.add(WizardResizable);
 	}
 	if(version >= INNO_VERSION(6, 3, 0)) {
 		flagreader.add(UninstallLogging);
+	}
+	if(version >= INNO_VERSION(6, 6, 0)) {
+		// Inno Setup 6.6.0 added four new wizard-styling flags after
+		// shUninstallLogging. WizardLightButtonsUnstyled is later
+		// dropped again in 6.7.0 (handled in the 6.7.0 patch).
+		flagreader.add(WizardModern);
+		flagreader.add(WizardBorderStyled);
+		flagreader.add(WizardKeepAspectRatio);
+		flagreader.add(WizardLightButtonsUnstyled);
 	}
 	
 	return flagreader.finalize();
@@ -843,6 +899,10 @@ NAMES(setup::header::flags, "Setup Option",
 	"use_previous_privileges",
 	"wizard_resizable",
 	"uninstall_logging",
+	"wizard modern",
+	"wizard border styled",
+	"wizard keep aspect ratio",
+	"wizard light buttons unstyled",
 	"uninstallable",
 	"disable dir page",
 	"disable program group page",
@@ -893,6 +953,12 @@ NAMES(setup::header::log_mode, "Uninstall Log Mode",
 NAMES(setup::header::style, "Style",
 	"classic",
 	"modern",
+)
+
+NAMES(setup::header::dark_style, "Dark Style",
+	"light",
+	"dark",
+	"dynamic",
 )
 
 NAMES(setup::header::auto_bool, "Auto Boolean",

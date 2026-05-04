@@ -102,6 +102,10 @@ struct header {
 		UsePreviousPrivileges,
 		WizardResizable,
 		UninstallLogging,
+		WizardModern,
+		WizardBorderStyled,
+		WizardKeepAspectRatio,
+		WizardLightButtonsUnstyled,
 		
 		// Obsolete flags
 		Uninstallable,
@@ -201,12 +205,21 @@ struct header {
 	Color back_color2;
 	Color image_back_color;
 	Color small_image_back_color;
+	Color image_back_color_dynamic_dark;
+	Color small_image_back_color_dynamic_dark;
+	boost::uint8_t wizard_image_opacity;
 	
 	enum style {
 		ClassicStyle,
 		ModernStyle
 	};
 	style wizard_style;
+	enum dark_style {
+		LightStyle,
+		DarkStyle,
+		DynamicStyle
+	};
+	dark_style wizard_dark_style;
 	boost::uint32_t wizard_resize_percent_x;
 	boost::uint32_t wizard_resize_percent_y;
 	
@@ -300,6 +313,7 @@ NAMED_ENUM(setup::header::alpha_format)
 NAMED_ENUM(setup::header::install_verbosity)
 NAMED_ENUM(setup::header::log_mode)
 NAMED_ENUM(setup::header::style)
+NAMED_ENUM(setup::header::dark_style)
 NAMED_ENUM(setup::header::auto_bool)
 NAMED_ENUM(setup::header::privilege_level)
 NAMED_ENUM(setup::header::language_detection_method)

@@ -271,6 +271,11 @@ void header::load(std::istream & is, const version & version) {
 	} else {
 		close_applications_filter_excludes.clear();
 	}
+	if(version >= INNO_VERSION(6, 5, 0)) {
+		is >> util::binary_string(seven_zip_library_name);
+	} else {
+		seven_zip_library_name.clear();
+	}
 	if(version >= INNO_VERSION(5, 2, 5)) {
 		is >> util::ansi_string(license_text);
 		is >> util::ansi_string(info_before);
@@ -324,6 +329,14 @@ void header::load(std::istream & is, const version & version) {
 	}
 	
 	directory_count = util::load<boost::uint32_t>(is, version.bits());
+	if(version >= INNO_VERSION(6, 5, 0)) {
+		// Inno Setup 6.5.0 inserted a NumISSigKeyEntries: Integer field
+		// between NumDirEntries and NumFileEntries
+		// (Projects/Src/Shared.Struct.pas at tag is-6_5_0). innoextract
+		// does not yet use the count, but the bytes must be consumed to
+		// keep the stream position correct.
+		(void)util::load<boost::uint32_t>(is, version.bits());
+	}
 	file_count = util::load<boost::uint32_t>(is, version.bits());
 	data_entry_count = util::load<boost::uint32_t>(is, version.bits());
 	icon_count = util::load<boost::uint32_t>(is, version.bits());
@@ -768,6 +781,7 @@ void header::decode(util::codepage_id codepage) {
 	util::to_utf8(uninstallable, codepage);
 	util::to_utf8(close_applications_filter, codepage);
 	util::to_utf8(close_applications_filter_excludes, codepage);
+	util::to_utf8(seven_zip_library_name, codepage);
 	util::to_utf8(setup_mutex, codepage, &lead_bytes);
 	util::to_utf8(changes_environment, codepage);
 	util::to_utf8(changes_associations, codepage);

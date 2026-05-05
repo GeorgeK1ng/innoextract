@@ -172,20 +172,17 @@ bool offsets::load_offsets_at(std::istream & is, boost::uint64_t pos) {
 				debug("could not read loader header (revision 2)");
 				return false;
 			}
-			boost::int64_t max_uint32 = boost::int64_t(std::numeric_limits<boost::uint32_t>::max());
-			if(offset_exe < 0 || offset_exe > max_uint32 ||
-			   offset0    < 0 || offset0    > max_uint32 ||
-			   offset1    < 0 || offset1    > max_uint32) {
-				log_warning << "Loader header offsets exceed 4 GiB; truncating to 32-bit";
+			if(offset_exe < 0 || offset0 < 0 || offset1 < 0) {
+				log_warning << "Loader header has negative offset(s)";
 			}
-			exe_offset = boost::uint32_t(offset_exe);
+			exe_offset = boost::uint64_t(offset_exe);
 			exe_compressed_size = 0;
 			exe_uncompressed_size = uncompressed_exe;
 			exe_checksum.type = crypto::CRC32;
 			exe_checksum.crc32 = crc_exe;
 			message_offset = 0;
-			header_offset = boost::uint32_t(offset0);
-			data_offset = boost::uint32_t(offset1);
+			header_offset = boost::uint64_t(offset0);
+			data_offset = boost::uint64_t(offset1);
 			boost::uint32_t expected = util::load<boost::uint32_t>(is);
 			if(is.fail()) {
 				is.clear();

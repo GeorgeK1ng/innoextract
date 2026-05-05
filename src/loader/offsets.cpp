@@ -109,9 +109,9 @@ bool offsets::load_from_exe_resource(std::istream & is) {
 	return load_offsets_at(is, resource.offset);
 }
 
-bool offsets::load_offsets_at(std::istream & is, boost::uint32_t pos) {
+bool offsets::load_offsets_at(std::istream & is, boost::uint64_t pos) {
 	
-	if(is.seekg(pos).fail()) {
+	if(is.seekg(std::streamoff(pos)).fail()) {
 		is.clear();
 		debug("could not seek to loader header");
 		return false;

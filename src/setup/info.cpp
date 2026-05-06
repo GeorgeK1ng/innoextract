@@ -106,11 +106,21 @@ void load_wizard_and_decompressor(std::istream & is, const setup::version & vers
 	
 	info.wizard_images.clear();
 	info.wizard_images_small.clear();
+	info.wizard_images_back.clear();
 	
 	load_wizard_images(is, version, info.wizard_images, entries);
 	
 	if(version >= INNO_VERSION(2, 0, 0) || version.is_isx()) {
 		load_wizard_images(is, version, info.wizard_images_small, entries);
+	}
+	
+	if(version >= INNO_VERSION(6, 7, 0)) {
+		// Inno Setup 6.7.0 added a "back image" wizard image group (used
+		// for the new WizardBackImageFile directive), in addition to the
+		// existing main and small image groups. See the wizard-image read
+		// block in Projects/Src/Setup.MainFunc.pas at tag is-6_7_0 in
+		// https://github.com/jrsoftware/issrc.
+		load_wizard_images(is, version, info.wizard_images_back, entries);
 	}
 	
 	if(version >= INNO_VERSION(6, 6, 0)) {
@@ -119,9 +129,12 @@ void load_wizard_and_decompressor(std::istream & is, const setup::version & vers
 		// includes both copies regardless of whether dark-mode images
 		// were actually configured; the runtime decides which set to
 		// use based on WantWizardImagesDynamicDark.
-		std::vector<std::string> dark_images, dark_images_small;
+		std::vector<std::string> dark_images, dark_images_small, dark_images_back;
 		load_wizard_images(is, version, dark_images, entries);
 		load_wizard_images(is, version, dark_images_small, entries);
+		if(version >= INNO_VERSION(6, 7, 0)) {
+			load_wizard_images(is, version, dark_images_back, entries);
+		}
 	}
 	
 	info.decompressor_dll.clear();

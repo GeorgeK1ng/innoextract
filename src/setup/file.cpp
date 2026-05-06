@@ -241,6 +241,15 @@ void file_entry::load(std::istream & is, const info & i) {
 	}
 	
 	options |= flagreader.finalize();
+	if(i.version >= INNO_VERSION(6, 7, 0)) {
+		// Inno Setup 6.7.0 padded TSetupFileEntryOption to 57 elements
+		// (foUnusedPadding=56) so the set is always 8 bytes regardless
+		// of the actual flag count, matching the analogous change to
+		// TSetupHeaderOption (see is-6_7_0 in issrc). Skip past the
+		// extra padding bytes so the trailing FileType byte is read
+		// from the right offset.
+		flagreader.discard_padding_to(8);
+	}
 	
 	if(i.version.bits() == 16 || i.version >= INNO_VERSION(5, 0, 0)) {
 		type = stored_enum<stored_file_type_0>(is).get();

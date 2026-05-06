@@ -114,6 +114,7 @@ struct info {
 	//! Loading enabled by \c WizardImages
 	std::vector<std::string> wizard_images;
 	std::vector<std::string> wizard_images_small;
+	std::vector<std::string> wizard_images_back; //!< Inno Setup 6.7.0+ background images
 	
 	//! Contents of the helper DLL used to decompress setup data in some versions.
 	//! Loading enabled by \c DecompressorDll

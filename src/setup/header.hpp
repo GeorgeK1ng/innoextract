@@ -106,6 +106,8 @@ struct header {
 		WizardBorderStyled,
 		WizardKeepAspectRatio,
 		WizardLightButtonsUnstyled,
+		RedirectionGuard,
+		WizardBevelsHidden,
 		
 		// Obsolete flags
 		Uninstallable,
@@ -173,6 +175,11 @@ struct header {
 	std::string architectures_installed_in_64bit_mode_expr;
 	std::string close_applications_filter_excludes;
 	std::string seven_zip_library_name;
+	std::string use_previous_app_dir;
+	std::string use_previous_group;
+	std::string use_previous_setup_type;
+	std::string use_previous_tasks;
+	std::string use_previous_user_info;
 	std::string license_text;
 	std::string info_before;
 	std::string info_after;
@@ -208,7 +215,10 @@ struct header {
 	Color small_image_back_color;
 	Color image_back_color_dynamic_dark;
 	Color small_image_back_color_dynamic_dark;
+	Color wizard_back_color;
+	Color wizard_back_color_dynamic_dark;
 	boost::uint8_t wizard_image_opacity;
+	boost::uint8_t wizard_back_image_opacity;
 	
 	enum style {
 		ClassicStyle,
@@ -221,6 +231,12 @@ struct header {
 		DynamicStyle
 	};
 	dark_style wizard_dark_style;
+	enum light_control_styling {
+		LightControlStyleAll,
+		LightControlStyleAllButButtons,
+		LightControlStyleOnlyRequired
+	};
+	light_control_styling wizard_light_control_styling;
 	boost::uint32_t wizard_resize_percent_x;
 	boost::uint32_t wizard_resize_percent_y;
 	
@@ -315,6 +331,7 @@ NAMED_ENUM(setup::header::install_verbosity)
 NAMED_ENUM(setup::header::log_mode)
 NAMED_ENUM(setup::header::style)
 NAMED_ENUM(setup::header::dark_style)
+NAMED_ENUM(setup::header::light_control_styling)
 NAMED_ENUM(setup::header::auto_bool)
 NAMED_ENUM(setup::header::privilege_level)
 NAMED_ENUM(setup::header::language_detection_method)

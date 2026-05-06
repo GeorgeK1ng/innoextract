@@ -56,7 +56,16 @@ void data_entry::load(std::istream & is, const info & i) {
 		}
 	}
 	
-	chunk.sort_offset = chunk.offset = util::load<boost::uint32_t>(is);
+	if(i.version >= INNO_VERSION(6, 5, 2)) {
+		// Inno Setup 6.5.2 widened TSetupFileLocationEntry.StartOffset
+		// from LongWord (4 bytes) to Int64 (8 bytes) so data offsets
+		// within a slice can exceed 4 GiB. See
+		// Projects/Src/Shared.Struct.pas at tag is-6_5_2 in
+		// https://github.com/jrsoftware/issrc.
+		chunk.sort_offset = chunk.offset = util::load<boost::uint64_t>(is);
+	} else {
+		chunk.sort_offset = chunk.offset = util::load<boost::uint32_t>(is);
+	}
 	
 	if(i.version >= INNO_VERSION(4, 0, 1)) {
 		file.offset = util::load<boost::uint64_t>(is);

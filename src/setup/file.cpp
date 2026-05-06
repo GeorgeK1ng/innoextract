@@ -56,6 +56,14 @@ STORED_ENUM_MAP(stored_file_type_1, file_entry::UserFile,
 	file_entry::RegSvrExe,
 );
 
+// Inno Setup 6.5.0 introduced the per-file verification kind alongside
+// the SHA-256 hash and ISSig allowed-keys list appended to TSetupFileEntry.
+STORED_ENUM_MAP(stored_file_verification_type, file_entry::FileVerificationNone,
+	file_entry::FileVerificationNone,
+	file_entry::FileVerificationHash,
+	file_entry::FileVerificationISSig,
+);
+
 } // anonymous namespace
 
 } // namespace setup
@@ -67,6 +75,12 @@ NAMES(setup::file_copy_mode, "File Copy Mode",
 	"if doesn't exist",
 	"always overwrite",
 	"always skip if same or older",
+)
+
+NAMES(setup::file_entry::file_verification_type, "File Verification Type",
+	"none",
+	"hash",
+	"IS sig",
 )
 
 namespace setup {
@@ -91,6 +105,34 @@ void file_entry::load(std::istream & is, const info & i) {
 	}
 	
 	load_condition_data(is, i);
+	
+	if(i.version >= INNO_VERSION(6, 5, 0)) {
+		// Inno Setup 6.5.0 appended five new expression strings (Excludes,
+		// DownloadISSigSource, DownloadUserName, DownloadPassword,
+		// ExtractArchivePassword) and a per-file Verification packed
+		// record (ISSigAllowedKeys ansi string, 32-byte SHA-256 digest,
+		// TSetupFileVerificationType byte enum) to TSetupFileEntry, after
+		// the BeforeInstall string and before MinVersion. See
+		// Projects/Src/Shared.Struct.pas at tag is-6_5_0 in
+		// https://github.com/jrsoftware/issrc.
+		is >> util::encoded_string(excludes, i.codepage, i.header.lead_bytes);
+		is >> util::encoded_string(download_source, i.codepage, i.header.lead_bytes);
+		is >> util::encoded_string(download_user, i.codepage, i.header.lead_bytes);
+		is >> util::encoded_string(download_password, i.codepage, i.header.lead_bytes);
+		is >> util::encoded_string(archive_password, i.codepage, i.header.lead_bytes);
+		is >> util::ansi_string(issig_allowed_keys);
+		is.read(checksum.sha256, std::streamsize(sizeof(checksum.sha256)));
+		checksum.type = crypto::SHA256;
+		verification = stored_enum<stored_file_verification_type>(is).get();
+	} else {
+		excludes.clear();
+		download_source.clear();
+		download_user.clear();
+		download_password.clear();
+		archive_password.clear();
+		issig_allowed_keys.clear();
+		verification = FileVerificationNone;
+	}
 	
 	load_version_data(is, i.version);
 	
@@ -189,6 +231,14 @@ void file_entry::load(std::istream & is, const info & i) {
 	if(i.version >= INNO_VERSION(5, 2, 5)) {
 		flagreader.add(GacInstall);
 	}
+	if(i.version >= INNO_VERSION(6, 5, 0)) {
+		// Inno Setup 6.5.0 added two flags at the end of the bitset for
+		// the new [Files] flags `download` and `extractarchive`
+		// (TSetupFileEntry.Options in Projects/Src/Shared.Struct.pas at
+		// tag is-6_5_0 in https://github.com/jrsoftware/issrc).
+		flagreader.add(Download);
+		flagreader.add(ExtractArchive);
+	}
 	
 	options |= flagreader.finalize();
 	
@@ -199,7 +249,11 @@ void file_entry::load(std::istream & is, const info & i) {
 	}
 	
 	additional_locations.clear();
-	checksum.type = crypto::None;
+	if(i.version < INNO_VERSION(6, 5, 0)) {
+		// For Inno Setup 6.5.0+, file_entry::checksum carries the SHA-256
+		// from the per-file ISSig Verification block, populated above.
+		checksum.type = crypto::None;
+	}
 	size = 0;
 	
 }
@@ -239,6 +293,8 @@ NAMES(setup::file_entry::flags, "File Option",
 	"set ntfs compression",
 	"unset ntfs compression",
 	"gac install",
+	"download",
+	"extract archive",
 	"readme",
 )
 

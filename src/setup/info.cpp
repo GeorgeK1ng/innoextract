@@ -27,6 +27,7 @@
 #include <boost/foreach.hpp>
 
 #include "crypto/hasher.hpp"
+#include "crypto/crc32.hpp"
 #include "crypto/pbkdf2.hpp"
 #include "crypto/sha256.hpp"
 #include "crypto/xchacha20.hpp"
@@ -37,6 +38,7 @@
 #include "setup/file.hpp"
 #include "setup/icon.hpp"
 #include "setup/ini.hpp"
+#include "setup/issigkey.hpp"
 #include "setup/item.hpp"
 #include "setup/language.hpp"
 #include "setup/message.hpp"
@@ -123,6 +125,16 @@ void load_wizard_and_decompressor(std::istream & is, const setup::version & vers
 		}
 	}
 	
+	if(version >= INNO_VERSION(6, 5, 0) && !header.seven_zip_library_name.empty()) {
+		// Inno Setup 6.5.0 added an embedded 7-Zip decoder DLL stream
+		// after the decompressor DLL block, present whenever the [Setup]
+		// directive SevenZipLibraryName is set (which Setup uses to
+		// implement Extract7ZipArchive support added in 6.4.0). Skip it;
+		// innoextract does not need to decode 7-Zip archives during a
+		// listing.
+		util::binary_string::skip(is);
+	}
+	
 	info.decrypt_dll.clear();
 	if((header.options & header::EncryptionUsed) && version < INNO_VERSION(6, 4, 0)) {
 		if(entries & (info::DecryptDll | info::NoSkip)) {
@@ -204,6 +216,8 @@ void info::try_load(std::istream & is, entry_types entries, util::codepage_id fo
 	load_entries(*reader, entries, header.task_count, tasks, Tasks);
 	debug("loading directories");
 	load_entries(*reader, entries, header.directory_count, directories, Directories);
+	debug("loading issig keys");
+	load_entries(*reader, entries, header.issig_key_count, issig_keys, ISSigKeys);
 	debug("loading files");
 	load_entries(*reader, entries, header.file_count, files, Files);
 	debug("loading icons");
@@ -261,6 +275,41 @@ void info::load(std::istream & is, entry_types entries, util::codepage_id force_
 	if(version.is_ambiguous()) {
 		// Force parsing all headers so that we don't miss any errors.
 		entries |= NoSkip;
+	}
+	
+	if(version >= INNO_VERSION(6, 5, 0)) {
+		// Inno Setup 6.5.0 split the encryption metadata out of
+		// TSetupHeader into a standalone TSetupEncryptionHeader stored on
+		// the outer stream between the version magic and the first block
+		// (Projects/Src/Shared.Struct.pas at tag is-6_5_0 in
+		// https://github.com/jrsoftware/issrc). Read it here so the block
+		// reader starts at the right offset; innoextract does not yet
+		// support actually decrypting 6.5.0+ encrypted installers.
+		boost::uint32_t expected_crc = util::load<boost::uint32_t>(is);
+		crypto::crc32 checksum;
+		checksum.init();
+		boost::uint8_t encryption_use = checksum.load<boost::uint8_t>(is);
+		if(encryption_use != 0) {
+			log_warning << "Encrypted setup not supported; cannot decrypt files";
+		}
+		// 16-byte KDFSalt + 4-byte KDFIterations
+		// + 8-byte BaseNonce.RandomXorStartOffset
+		// + 4-byte BaseNonce.RandomXorFirstSlice
+		// + 12-byte BaseNonce.RemainingRandom (3 x 4 bytes)
+		// + 4-byte PasswordTest = 48 bytes after encryption_use.
+		for(int i = 0; i < 16; i++) {
+			(void)checksum.load<boost::uint8_t>(is);
+		}
+		(void)checksum.load<boost::uint32_t>(is);
+		(void)checksum.load<boost::uint64_t>(is);
+		(void)checksum.load<boost::uint32_t>(is);
+		for(int i = 0; i < 3; i++) {
+			(void)checksum.load<boost::uint32_t>(is);
+		}
+		(void)checksum.load<boost::uint32_t>(is);
+		if(checksum.finalize() != expected_crc) {
+			log_warning << "Encryption header checksum mismatch!";
+		}
 	}
 	
 	bool parsed_without_errors = false;

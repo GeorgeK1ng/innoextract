@@ -188,6 +188,7 @@ struct header {
 	size_t component_count;
 	size_t task_count;
 	size_t directory_count;
+	size_t issig_key_count;
 	size_t file_count;
 	size_t data_entry_count;
 	size_t icon_count;

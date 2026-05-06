@@ -338,10 +338,14 @@ void header::load(std::istream & is, const version & version) {
 	if(version >= INNO_VERSION(6, 5, 0)) {
 		// Inno Setup 6.5.0 inserted a NumISSigKeyEntries: Integer field
 		// between NumDirEntries and NumFileEntries
-		// (Projects/Src/Shared.Struct.pas at tag is-6_5_0). innoextract
-		// does not yet use the count, but the bytes must be consumed to
-		// keep the stream position correct.
-		(void)util::load<boost::uint32_t>(is, version.bits());
+		// (Projects/Src/Shared.Struct.pas at tag is-6_5_0). Each entry is a
+		// triple of binary strings (PublicX, PublicY, RuntimeID) describing
+		// an ISSigTool-issued public key the installer trusts; innoextract
+		// does not yet make use of the keys themselves but stores the count
+		// so info::try_load can skip the right number of entries.
+		issig_key_count = util::load<boost::uint32_t>(is, version.bits());
+	} else {
+		issig_key_count = 0;
 	}
 	file_count = util::load<boost::uint32_t>(is, version.bits());
 	data_entry_count = util::load<boost::uint32_t>(is, version.bits());
@@ -436,7 +440,16 @@ void header::load(std::istream & is, const version & version) {
 		wizard_image_opacity = 0xff;
 	}
 	
-	if(version >= INNO_VERSION(6, 4, 0)) {
+	if(version >= INNO_VERSION(6, 5, 0)) {
+		// Inno Setup 6.5.0 moved the encryption fields (password test, KDF
+		// salt, KDF iterations, base nonce) out of TSetupHeader and into a
+		// separate TSetupEncryptionHeader stored elsewhere. innoextract
+		// does not yet parse encrypted 6.5.0+ installers; for unencrypted
+		// ones the right thing is to read no encryption bytes from the
+		// header stream at all.
+		password.type = crypto::None;
+		password_salt.clear();
+	} else if(version >= INNO_VERSION(6, 4, 0)) {
 		is.read(password.sha256, 4);
 		password.type = crypto::PBKDF2_SHA256_XChaCha20;
 	} else if(version >= INNO_VERSION(5, 3, 9)) {
@@ -449,7 +462,9 @@ void header::load(std::istream & is, const version & version) {
 		password.crc32 = util::load<boost::uint32_t>(is);
 		password.type = crypto::CRC32;
 	}
-	if(version >= INNO_VERSION(6, 4, 0)) {
+	if(version >= INNO_VERSION(6, 5, 0)) {
+		// Already cleared above; nothing to read.
+	} else if(version >= INNO_VERSION(6, 4, 0)) {
 		password_salt.resize(44); // PBKDF2 salt + iteration count + ChaCha2 base nonce
 		is.read(&password_salt[0], std::streamsize(password_salt.length()));
 	} else if(version >= INNO_VERSION(4, 2, 2)) {
@@ -749,7 +764,7 @@ header::flags header::load_flags(std::istream & is, const version & version) {
 		flagreader.add(AppendDefaultDirName);
 		flagreader.add(AppendDefaultGroupName);
 	}
-	if(version >= INNO_VERSION(4, 2, 2)) {
+	if(version >= INNO_VERSION(4, 2, 2) && version < INNO_VERSION(6, 5, 0)) {
 		flagreader.add(EncryptionUsed);
 	}
 	if(version >= INNO_VERSION(5, 0, 4) && version < INNO_VERSION(5, 6, 1)) {

@@ -43,6 +43,7 @@ struct directory_entry;
 struct file_entry;
 struct icon_entry;
 struct ini_entry;
+struct issig_key_entry;
 struct language_entry;
 struct message_entry;
 struct permission_entry;
@@ -69,6 +70,7 @@ struct info {
 		Files,
 		Icons,
 		IniEntries,
+		ISSigKeys,
 		Languages,
 		Messages,
 		Permissions,
@@ -98,6 +100,7 @@ struct info {
 	std::vector<file_entry>       files;                    //! \c Files
 	std::vector<icon_entry>       icons;                    //! \c Icons
 	std::vector<ini_entry>        ini_entries;              //! \c IniEntries
+	std::vector<issig_key_entry>  issig_keys;               //! \c ISSigKeys
 	std::vector<language_entry>   languages;                //! \c Languages
 	std::vector<message_entry>    messages;                 //! \c Messages
 	std::vector<permission_entry> permissions;              //! \c Permissions

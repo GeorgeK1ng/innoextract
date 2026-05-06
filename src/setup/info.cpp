@@ -113,6 +113,17 @@ void load_wizard_and_decompressor(std::istream & is, const setup::version & vers
 		load_wizard_images(is, version, info.wizard_images_small, entries);
 	}
 	
+	if(version >= INNO_VERSION(6, 6, 0)) {
+		// Inno Setup 6.6.0 added a second copy of each wizard image
+		// group for the dynamic-dark theme. The on-disk format always
+		// includes both copies regardless of whether dark-mode images
+		// were actually configured; the runtime decides which set to
+		// use based on WantWizardImagesDynamicDark.
+		std::vector<std::string> dark_images, dark_images_small;
+		load_wizard_images(is, version, dark_images, entries);
+		load_wizard_images(is, version, dark_images_small, entries);
+	}
+	
 	info.decompressor_dll.clear();
 	if(header.compression == stream::BZip2
 	   || (header.compression == stream::LZMA1 && version == INNO_VERSION(4, 1, 5))

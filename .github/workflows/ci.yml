@@ -18,8 +18,22 @@ on:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          -
+            arch: amd64
+            runner: ubuntu-24.04
+            artifact: innoextract-linux-amd64
+            check_style: true
+          -
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            artifact: innoextract-linux-arm64
+            check_style: false
     steps:
       -
         name: Checkout
@@ -43,6 +57,7 @@ jobs:
         run: ctest --test-dir ${{ github.workspace }}/build --output-on-failure --timeout 120
       -
         name: Check Style
+        if: matrix.check_style
         run: cmake --build ${{ github.workspace }}/build --target style
       -
         name: Install
@@ -55,7 +70,7 @@ jobs:
         name: Prepare release binary
         id: asset
         run: |
-          name="innoextract-linux-$(uname -m)"
+          name="${{ matrix.artifact }}"
           mkdir -p release
           cp "${{ github.workspace }}/dist/bin/innoextract" "release/${name}"
           echo "name=${name}" >> "${GITHUB_OUTPUT}"
@@ -68,8 +83,22 @@ jobs:
           if-no-files-found: error
 
   macos:
-    runs-on: macos-latest
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          -
+            arch: arm64
+            runner: macos-15
+            artifact: innoextract-darwin-arm64
+            cxx_flags: ""
+          -
+            arch: amd64
+            runner: macos-15-intel
+            artifact: innoextract-darwin-amd64
+            cxx_flags: "-isystem /usr/local/include"
     steps:
       -
         name: Checkout
@@ -83,6 +112,8 @@ jobs:
         run: brew install boost xz
       -
         name: Configure
+        env:
+          CXXFLAGS: ${{ matrix.cxx_flags }}
         run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
       -
         name: Build
@@ -101,7 +132,7 @@ jobs:
         name: Prepare release binary
         id: asset
         run: |
-          name="innoextract-darwin-$(uname -m)"
+          name="${{ matrix.artifact }}"
           mkdir -p release
           cp "${{ github.workspace }}/dist/bin/innoextract" "release/${name}"
           echo "name=${name}" >> "${GITHUB_OUTPUT}"
@@ -114,7 +145,7 @@ jobs:
           if-no-files-found: error
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     timeout-minutes: 10
     defaults:
       run:
@@ -160,7 +191,7 @@ jobs:
         name: Prepare release binary
         id: asset
         run: |
-          name="innoextract-windows-$(uname -m).exe"
+          name="innoextract-windows-amd64.exe"
           mkdir -p release
           cp "${GITHUB_WORKSPACE}/dist/bin/innoextract.exe" "release/${name}"
           echo "name=${name}" >> "${GITHUB_OUTPUT}"
@@ -173,7 +204,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # required to create GitHub release
     needs:

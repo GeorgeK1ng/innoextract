@@ -17,8 +17,8 @@ on:
 
 jobs:
   build-installers:
-    name: ${{ matrix.compiler }}
-    runs-on: windows-latest
+    name: build-installers (${{ matrix.compiler }})
+    runs-on: windows-2025
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -239,7 +239,7 @@ jobs:
           if-no-files-found: error
 
   validate-installers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - build-installers
     timeout-minutes: 20

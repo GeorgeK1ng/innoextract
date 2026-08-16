@@ -1,4 +1,11 @@
 
+innoextract 1.11.0 (2026-08-17)
+ - Added support for Inno Setup 6.4.2, 6.4.3, 6.5.x, 6.6.x, 6.7.x, 7.0.x and 7.1.0 installers
+ - Added support for newer Inno Setup data layouts, including 64-bit loader offsets, 64-bit data block sizes, ISSig metadata and 7.x entry bitness fields
+ - Fixed parsing of newer Inno Setup file, data, header, language, registry, run and task entries after upstream layout changes
+ - Added end-to-end extraction tests using fixture installers built with Inno Setup versions from 5.6.1 through 7.1.0
+ - Added Linux arm64 and macOS amd64 release binaries
+
 innoextract 1.10.0 (2026-08-16)
  - Added support for Inno Setup 6.1.2, 6.2.1, 6.2.2, 6.3.x and 6.4.0 installers
  - Added support for a modified Inno Setup 5.3.10 variant

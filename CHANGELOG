@@ -1,9 +1,15 @@
 
-innoextract 1.10 (TBD)
- - Added support for Inno Setup 6.3.x installers
- - Added support for Inno Setup 6.4.0 installers
+innoextract 1.10.0 (2026-08-16)
+ - Added support for Inno Setup 6.1.2, 6.2.1, 6.2.2, 6.3.x and 6.4.0 installers
  - Added support for a modified Inno Setup 5.3.10 variant
+ - Added support for SHA-256, PBKDF2-SHA256 and XChaCha20 decryption
  - Added unit tests, enable with BUILD_TESTS
+ - Fixed extracting files with repeated or shared starting locations in GOG Galaxy installers
+ - Fixed XChaCha20 decryption on big-endian platforms
+ - Fixed debug output for installers with out-of-bounds language IDs
+ - Fixed builds with newer Boost and CMake versions
+ - Added GitHub CI and release binaries for Linux, macOS and Windows
+ - Release versions now use semantic versioning
  - Replaced USE_ARC4 build option with BUILD_DECRYPTION
  - Linking will be done using Mold or LLD if available
 

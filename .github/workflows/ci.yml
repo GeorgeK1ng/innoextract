@@ -31,7 +31,7 @@ jobs:
         run: sudo apt-get install build-essential cmake libboost-all-dev liblzma-dev
       -
         name: Configure
-        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=dev -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
       -
         name: Build
         run: cmake --build ${{ github.workspace }}/build
@@ -62,7 +62,7 @@ jobs:
         run: brew install boost xz
       -
         name: Configure
-        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=dev -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
       -
         name: Build
         run: cmake --build ${{ github.workspace }}/build
@@ -88,7 +88,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       -
         name: Dependencies
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
         with:
           msystem: MINGW64
           update: true
@@ -103,7 +103,7 @@ jobs:
             mingw-w64-x86_64-zlib
       -
         name: Configure
-        run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=dev -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
       -
         name: Build
         run: cmake --build "${GITHUB_WORKSPACE}/build"

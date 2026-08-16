@@ -177,22 +177,28 @@ find_package(Boost REQUIRED COMPONENTS
 	iostreams
 	filesystem
 	date_time
-	system
 	program_options
 )
-list(APPEND LIBRARIES ${Boost_LIBRARIES})
+set(INNOEXTRACT_BOOST_LIBRARIES ${Boost_LIBRARIES})
 link_directories(${Boost_LIBRARY_DIRS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 if(NOT Boost_VERSION_MACRO)
 	# CMP0093 changed Boost_VERSION to x.y.z format and provide the old format in Boost_VERSION_MACRO
 	set(Boost_VERSION_MACRO ${Boost_VERSION})
 endif()
+find_package(Boost QUIET COMPONENTS system)
+if(Boost_SYSTEM_FOUND)
+	list(APPEND INNOEXTRACT_BOOST_LIBRARIES ${Boost_SYSTEM_LIBRARY})
+elseif(Boost_VERSION_MACRO LESS 106900)
+	message(FATAL_ERROR "Could NOT find Boost component system")
+endif()
+list(APPEND LIBRARIES ${INNOEXTRACT_BOOST_LIBRARIES})
 add_definitions(-DBOOST_SYSTEM_DISABLE_THREADS)
 if(win32)
 	add_definitions(-DBOOST_SYSTEM_USE_UTF8)
 endif()
 
-has_static_libs(Boost Boost_LIBRARIES)
+has_static_libs(Boost INNOEXTRACT_BOOST_LIBRARIES)
 if(Boost_HAS_STATIC_LIBS)
 	foreach(Lib IN ITEMS ZLIB BZip2)
 		string(TOUPPER ${Lib} LIB)

@@ -84,7 +84,7 @@ struct version {
 	//! \return true if the version stored might not be correct
 	bool is_ambiguous() const;
 	
-	operator version_constant() const {
+	operator version_constant() const noexcept {
 		return value;
 	}
 	

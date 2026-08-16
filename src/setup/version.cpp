@@ -49,7 +49,7 @@ struct known_legacy_version {
 	version_constant version;
 	version::flags variant;
 	
-	operator version_constant() const { return version; }
+	operator version_constant() const noexcept { return version; }
 	
 };
 
@@ -67,7 +67,7 @@ struct known_version {
 	version_constant version;
 	version::flags variant;
 	
-	operator version_constant() const { return version; }
+	operator version_constant() const noexcept { return version; }
 	
 };
 

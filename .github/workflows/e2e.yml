@@ -22,7 +22,6 @@ jobs:
     timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 6
       matrix:
         include:
           - compiler: '5.6.1'
@@ -134,6 +133,11 @@ jobs:
             asset: 'innosetup-7.0.2-x64.exe'
             url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_0_2/innosetup-7.0.2-x64.exe'
             sha256: '5ad54ca3def786f8f4212552e54cc6d8d61329e2d24a1cfee0571d42c2684ff1'
+            data_version: '7.0.0.3 (unicode)'
+          - compiler: '7.1.0'
+            asset: 'innosetup-7.1.0-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_0/innosetup-7.1.0-x64.exe'
+            sha256: '0362a383ed217d4c4239b5933866dd96d3eb2102737da92f80f6057a4b40df2f'
             data_version: '7.0.0.3 (unicode)'
     steps:
       -

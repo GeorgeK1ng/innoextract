@@ -13,16 +13,19 @@ on:
       - 'dev'
       - 'master'
     tags:
-      - '*'
+      - 'v*'
   pull_request:
 
 jobs:
   linux:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       -
         name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       -
         name: Update
         run: sudo apt-get update
@@ -45,19 +48,34 @@ jobs:
         name: Install
         run: cmake --install ${{ github.workspace }}/build --prefix ${{ github.workspace }}/dist
       -
+        name: Smoke test
+        run: |
+          "${{ github.workspace }}/dist/bin/innoextract" -h
+      -
+        name: Prepare release binary
+        id: asset
+        run: |
+          name="innoextract-linux-$(uname -m)"
+          mkdir -p release
+          cp "${{ github.workspace }}/dist/bin/innoextract" "release/${name}"
+          echo "name=${name}" >> "${GITHUB_OUTPUT}"
+      -
         name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: innoextract-linux
-          path: dist
+          name: ${{ steps.asset.outputs.name }}
+          path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
 
   macos:
     runs-on: macos-latest
+    timeout-minutes: 10
     steps:
       -
         name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       -
         name: Dependencies
         env:
@@ -76,15 +94,28 @@ jobs:
         name: Install
         run: cmake --install ${{ github.workspace }}/build --prefix ${{ github.workspace }}/dist
       -
+        name: Smoke test
+        run: |
+          "${{ github.workspace }}/dist/bin/innoextract" -h
+      -
+        name: Prepare release binary
+        id: asset
+        run: |
+          name="innoextract-darwin-$(uname -m)"
+          mkdir -p release
+          cp "${{ github.workspace }}/dist/bin/innoextract" "release/${name}"
+          echo "name=${name}" >> "${GITHUB_OUTPUT}"
+      -
         name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: innoextract-darwin
-          path: dist
+          name: ${{ steps.asset.outputs.name }}
+          path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
 
   windows:
     runs-on: windows-latest
+    timeout-minutes: 10
     defaults:
       run:
         shell: msys2 {0}
@@ -92,6 +123,8 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
       -
         name: Dependencies
         uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
@@ -112,19 +145,55 @@ jobs:
         run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
       -
         name: Build
-        timeout-minutes: 10
         run: cmake --build "${GITHUB_WORKSPACE}/build"
       -
         name: Test
-        timeout-minutes: 5
         run: ctest --test-dir "${GITHUB_WORKSPACE}/build" --output-on-failure --timeout 120
       -
         name: Install
         run: cmake --install "${GITHUB_WORKSPACE}/build" --prefix "${GITHUB_WORKSPACE}/dist"
       -
+        name: Smoke test
+        run: |
+          "${GITHUB_WORKSPACE}/dist/bin/innoextract.exe" -h
+      -
+        name: Prepare release binary
+        id: asset
+        run: |
+          name="innoextract-windows-$(uname -m).exe"
+          mkdir -p release
+          cp "${GITHUB_WORKSPACE}/dist/bin/innoextract.exe" "release/${name}"
+          echo "name=${name}" >> "${GITHUB_OUTPUT}"
+      -
         name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: innoextract-windows
-          path: dist
+          name: ${{ steps.asset.outputs.name }}
+          path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # required to create GitHub release
+    needs:
+      - linux
+      - macos
+      - windows
+    steps:
+      -
+        name: Download artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: innoextract-*
+          path: release
+          merge-multiple: true
+      -
+        name: GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: true
+          files: release/*

@@ -37,6 +37,33 @@ macro(_version_escape var string)
 	string(REGEX REPLACE "\n" "\\\\n\"\n\t\"" ${var} "${${var}}")
 endmacro()
 
+# Use the current git tag as the build version when available. VERSION remains
+# the fallback for source archives or builds without git.
+set(GIT_DESCRIBED_VERSION 0)
+if(NOT GIT_DIR STREQUAL "" AND GIT_COMMAND)
+	get_filename_component(git_work_tree "${GIT_DIR}" DIRECTORY)
+	execute_process(
+		COMMAND
+			"${GIT_COMMAND}"
+			"--git-dir=${GIT_DIR}"
+			"--work-tree=${git_work_tree}"
+			"describe"
+			"--match" "v[0-9]*"
+			"--dirty=.m"
+			"--always"
+			"--tags"
+		RESULT_VARIABLE result
+		OUTPUT_VARIABLE git_describe
+		ERROR_QUIET
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	if("${result}" EQUAL 0 AND git_describe)
+		string(REGEX REPLACE "^v([0-9])" "\\1" git_version "${git_describe}")
+		set(VERSION_0_OVERRIDE "innoextract ${git_version}")
+		set(GIT_DESCRIBED_VERSION 1)
+	endif()
+endif()
+
 set(var "")
 foreach(arg IN LISTS VERSION_SOURCES)
 	if(var STREQUAL "")
@@ -97,7 +124,9 @@ if(NOT GIT_DIR STREQUAL "")
 		string(TOLOWER "${git_commit}" GIT_COMMIT)
 		foreach(i RANGE 20)
 			string(SUBSTRING "${GIT_COMMIT}" 0 ${i} GIT_COMMIT_PREFIX_${i})
-			set(GIT_SUFFIX_${i} " + ${GIT_COMMIT_PREFIX_${i}}")
+			if(NOT GIT_DESCRIBED_VERSION)
+				set(GIT_SUFFIX_${i} " + ${GIT_COMMIT_PREFIX_${i}}")
+			endif()
 		endforeach()
 	else()
 		message(WARNING "Git repository detected, but could not determine HEAD")

@@ -209,6 +209,8 @@ else(MSVC)
 		# Optimize for link speed in developer builds
 		if(linker_used STREQUAL "mold" OR linker_used STREQUAL "lld")
 			# mold and lld are fast enough without -gsplit-dwarf that we don't need to deal with its issues
+		elseif(MINGW)
+			# GNU ld for PE/COFF produces bogus split DWARF sections.
 		else()
 			add_cxxflag("-gsplit-dwarf")
 			add_cxxflag("-gdwarf-4") # -gsplit-dwarf is broken with DWARF 5

@@ -31,10 +31,13 @@ jobs:
         run: sudo apt-get install build-essential cmake libboost-all-dev liblzma-dev
       -
         name: Configure
-        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
       -
         name: Build
         run: cmake --build ${{ github.workspace }}/build
+      -
+        name: Test
+        run: ctest --test-dir ${{ github.workspace }}/build --output-on-failure --timeout 120
       -
         name: Check Style
         run: cmake --build ${{ github.workspace }}/build --target style
@@ -62,10 +65,13 @@ jobs:
         run: brew install boost xz
       -
         name: Configure
-        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B ${{ github.workspace }}/build -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
       -
         name: Build
         run: cmake --build ${{ github.workspace }}/build
+      -
+        name: Test
+        run: ctest --test-dir ${{ github.workspace }}/build --output-on-failure --timeout 120
       -
         name: Install
         run: cmake --install ${{ github.workspace }}/build --prefix ${{ github.workspace }}/dist
@@ -103,10 +109,15 @@ jobs:
             mingw-w64-x86_64-zlib
       -
         name: Configure
-        run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1
+        run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
       -
         name: Build
+        timeout-minutes: 10
         run: cmake --build "${GITHUB_WORKSPACE}/build"
+      -
+        name: Test
+        timeout-minutes: 5
+        run: ctest --test-dir "${GITHUB_WORKSPACE}/build" --output-on-failure --timeout 120
       -
         name: Install
         run: cmake --install "${GITHUB_WORKSPACE}/build" --prefix "${GITHUB_WORKSPACE}/dist"

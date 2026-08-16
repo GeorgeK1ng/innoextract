@@ -40,13 +40,13 @@ struct windows_language {
 	
 };
 
-bool operator<(windows_language language, boost::uint32_t language_id) {
+bool operator<(windows_language language, boost::uint32_t language_id) noexcept {
 	return language.language_id < language_id;
 }
 
 #if defined(__clang_major__) && __clang_major__ < 8 && defined(_LIBCPP_DEBUG)
 // Required for debug builds with Clang < 8
-bool operator<(boost::uint32_t language_id, windows_language language) {
+bool operator<(boost::uint32_t language_id, windows_language language) noexcept {
 	return language_id < language.language_id;
 }
 #endif

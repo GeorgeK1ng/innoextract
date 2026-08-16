@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2020 Daniel Scharrer
+ * Copyright (C) 2011-2019 Daniel Scharrer
  *
  * This software is provided 'as-is', without any express or implied
  * warranty.  In no event will the author(s) be held liable for any damages
@@ -21,59 +21,30 @@
 /*!
  * \file
  *
- * Structures for custom command entries stored in Inno Setup files.
+ * Structures for ISSig public key entries stored in Inno Setup 6.5.0+ files.
  */
-#ifndef INNOEXTRACT_SETUP_RUN_HPP
-#define INNOEXTRACT_SETUP_RUN_HPP
+#ifndef INNOEXTRACT_SETUP_ISSIGKEY_HPP
+#define INNOEXTRACT_SETUP_ISSIGKEY_HPP
 
 #include <string>
 #include <iosfwd>
-
-#include "setup/item.hpp"
-#include "util/enum.hpp"
-#include "util/flags.hpp"
 
 namespace setup {
 
 struct info;
 
-struct run_entry : public item {
+struct issig_key_entry {
 	
-	FLAGS(flags,
-		ShellExec,
-		SkipIfDoesntExist,
-		PostInstall,
-		Unchecked,
-		SkipIfSilent,
-		SkipIfNotSilent,
-		HideWizard,
-		Bits32,
-		Bits64,
-		RunAsOriginalUser,
-		DontLogParameters,
-		LogOutput
-	);
+	// introduced in 6.5.0
 	
-	enum wait_condition {
-		WaitUntilTerminated,
-		NoWait,
-		WaitUntilIdle,
-	};
+	// X coordinate of the Ed25519 public key, as raw bytes.
+	std::string public_x;
 	
-	std::string name;
-	std::string parameters;
-	std::string working_dir;
-	std::string run_once_id;
-	std::string status_message;
-	std::string verb;
-	std::string description;
-	std::string on_log;         //!< Inno Setup 7.0.0.1+ (OnLog)
+	// Y coordinate of the Ed25519 public key, as raw bytes.
+	std::string public_y;
 	
-	int show_command;
-	
-	wait_condition wait;
-	
-	flags options;
+	// Tool-supplied identifier (typically the ISSigTool key file name).
+	std::string runtime_id;
 	
 	void load(std::istream & is, const info & i);
 	
@@ -81,7 +52,4 @@ struct run_entry : public item {
 
 } // namespace setup
 
-NAMED_FLAGS(setup::run_entry::flags)
-NAMED_ENUM(setup::run_entry::wait_condition)
-
-#endif // INNOEXTRACT_SETUP_RUN_HPP
+#endif // INNOEXTRACT_SETUP_ISSIGKEY_HPP

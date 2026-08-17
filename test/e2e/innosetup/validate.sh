@@ -3,6 +3,7 @@ set -euo pipefail
 
 innoextract=
 installers=
+command_timeout=${INNOEXTRACT_E2E_TIMEOUT:-120}
 
 while [ "$#" -gt 0 ]; do
 	case "$1" in
@@ -52,11 +53,27 @@ cleanup() {
 trap cleanup EXIT
 
 run() {
+	local label=$1
+	shift
 	local output
-	if ! output=$("$@" 2>&1); then
+	local status
+	echo "$label" >&2
+	set +e
+	if command -v timeout >/dev/null 2>&1; then
+		output=$(timeout "${command_timeout}s" "$@" 2>&1)
+	else
+		output=$("$@" 2>&1)
+	fi
+	status=$?
+	set -e
+	if [ "$status" -ne 0 ]; then
 		printf '%s\n' "$output"
-		echo "command failed: $*" >&2
-		return 1
+		if [ "$status" -eq 124 ]; then
+			echo "command timed out after ${command_timeout}s: $*" >&2
+		else
+			echo "command failed: $*" >&2
+		fi
+		return "$status"
 	fi
 	printf '%s\n' "$output"
 }
@@ -80,16 +97,16 @@ validate_installer() {
 	tmp=$(mktemp -d)
 	tmp_dirs+=("$tmp")
 
-	actual_version=$(run "$innoextract" --progress=0 --data-version --silent "$installer" | tr -d '\r\n')
+	actual_version=$(run "$compiler: data-version" "$innoextract" --progress=0 --data-version --silent "$installer" | tr -d '\r\n')
 	if [ "$actual_version" != "$data_version" ]; then
 		echo "$compiler: expected data version '$data_version', got '$actual_version'" >&2
 		return 1
 	fi
 
-	run "$innoextract" --progress=0 --info "$installer" >/dev/null
+	run "$compiler: info" "$innoextract" --progress=0 --info "$installer" >/dev/null
 
 	listing="$tmp/listing.txt"
-	run "$innoextract" --progress=0 --list --silent "$installer" | tr '\\' '/' | tr -d '\r' > "$listing"
+	run "$compiler: list" "$innoextract" --progress=0 --list --silent "$installer" | tr '\\' '/' | tr -d '\r' > "$listing"
 	for path in "${expected_paths[@]}"; do
 		if ! grep -Fxq "$path" "$listing"; then
 			echo "$compiler: --list output missed expected path: $path" >&2
@@ -97,10 +114,10 @@ validate_installer() {
 		fi
 	done
 
-	run "$innoextract" --progress=0 --test --silent "$installer" >/dev/null
+	run "$compiler: test" "$innoextract" --progress=0 --test --silent "$installer" >/dev/null
 
 	output_dir="$tmp/output"
-	run "$innoextract" --progress=0 --extract --silent --output-dir "$output_dir" "$installer" >/dev/null
+	run "$compiler: extract" "$innoextract" --progress=0 --extract --silent --output-dir "$output_dir" "$installer" >/dev/null
 	for i in "${!expected_paths[@]}"; do
 		local extracted="$output_dir/${expected_paths[$i]}"
 		local expected="${expected_sources[$i]}"

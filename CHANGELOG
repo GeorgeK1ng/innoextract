@@ -1,4 +1,9 @@
 
+innoextract 1.12.0 (2026-08-17)
+ - Fixed checksum handling for Inno Setup 6.5+ file entries that do not use SHA-256 hash verification
+ - Fixed release binaries to be self-contained by statically linking third-party dependencies on Linux, macOS and Windows
+ - Release artifacts are now validated with end-to-end extraction tests on Linux amd64/arm64, macOS amd64/arm64 and Windows amd64 before publishing
+
 innoextract 1.11.0 (2026-08-17)
  - Added support for Inno Setup 6.4.2, 6.4.3, 6.5.x, 6.6.x, 6.7.x, 7.0.x and 7.1.0 installers
  - Added support for newer Inno Setup data layouts, including 64-bit loader offsets, 64-bit data block sizes, ISSig metadata and 7.x entry bitness fields

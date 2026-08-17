@@ -185,8 +185,10 @@ jobs:
         run: cmake --install "${GITHUB_WORKSPACE}/build" --prefix "${GITHUB_WORKSPACE}/dist"
       -
         name: Smoke test
+        shell: pwsh
         run: |
-          "${GITHUB_WORKSPACE}/dist/bin/innoextract.exe" -h
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+          & "${env:GITHUB_WORKSPACE}\dist\bin\innoextract.exe" -h
       -
         name: Prepare release binary
         id: asset

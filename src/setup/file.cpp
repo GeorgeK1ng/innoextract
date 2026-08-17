@@ -122,8 +122,8 @@ void file_entry::load(std::istream & is, const info & i) {
 		is >> util::encoded_string(archive_password, i.codepage, i.header.lead_bytes);
 		is >> util::ansi_string(issig_allowed_keys);
 		is.read(checksum.sha256, std::streamsize(sizeof(checksum.sha256)));
-		checksum.type = crypto::SHA256;
 		verification = stored_enum<stored_file_verification_type>(is).get();
+		checksum.type = (verification == FileVerificationHash) ? crypto::SHA256 : crypto::None;
 	} else {
 		excludes.clear();
 		download_source.clear();

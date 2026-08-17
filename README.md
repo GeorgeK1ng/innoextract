@@ -58,7 +58,7 @@ The default build settings are tuned for users - if you plan to make changes to 
 | `SET_OPTIMIZATION_FLAGS`  | `ON`      | Adjust compiler optimization flags.
 | `CXX_STD_VERSION`         | `2017`    | Maximum C++ standard version to enable.
 | `USE_DYNAMIC_UTIMENSAT`   | `OFF`     | Dynamically load utimensat(2) if not available at compile time.
-| `USE_STATIC_LIBS`         | `OFF`³    | Turns on static linking for all libraries, including `-static-libgcc` and `-static-libstdc++`. You can also use the individual options below:
+| `USE_STATIC_LIBS`         | `OFF`³    | Turns on static linking for all libraries, using `-static` with MinGW and `-static-libgcc` / `-static-libstdc++` with other GCC-like toolchains. You can also use the individual options below:
 | `LZMA_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `liblzma`.
 | `Boost_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link Boost. See also `FindBoost.cmake`.
 | `ZLIB_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `libz`. (used via Boost)

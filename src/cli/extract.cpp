@@ -255,6 +255,9 @@ public:
 		while(!stream_.eof()) {
 			char buffer[8192];
 			std::streamsize n = stream_.read(buffer, sizeof(buffer)).gcount();
+			if(n <= 0) {
+				break;
+			}
 			checksum_.update(buffer, size_t(n));
 			checksum_position_ += boost::uint64_t(n);
 		}

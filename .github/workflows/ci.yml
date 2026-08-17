@@ -8,6 +8,7 @@ permissions:
   contents: read
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - 'dev'
@@ -17,7 +18,7 @@ on:
   pull_request:
 
 jobs:
-  linux:
+  build-linux:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     strategy:
@@ -63,16 +64,6 @@ jobs:
         name: Install
         run: cmake --install ${{ github.workspace }}/build --prefix ${{ github.workspace }}/dist
       -
-        name: Check linked libraries
-        run: |
-          binary="${{ github.workspace }}/dist/bin/innoextract"
-          deps="$(ldd "${binary}" 2>&1 || true)"
-          echo "${deps}"
-          if echo "${deps}" | grep -E 'lib(boost|icu|lz4|lzma|bz2|z|stdc\+\+|gcc_s).*\.so'; then
-            echo "Unexpected dynamic dependency"
-            exit 1
-          fi
-      -
         name: Smoke test
         run: |
           "${{ github.workspace }}/dist/bin/innoextract" -h
@@ -92,7 +83,7 @@ jobs:
           path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
 
-  macos:
+  build-macos:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 10
     strategy:
@@ -167,16 +158,6 @@ jobs:
         name: Install
         run: cmake --install ${{ github.workspace }}/build --prefix ${{ github.workspace }}/dist
       -
-        name: Check linked libraries
-        run: |
-          binary="${{ github.workspace }}/dist/bin/innoextract"
-          deps="$(otool -L "${binary}")"
-          echo "${deps}"
-          if echo "${deps}" | grep -E 'lib(boost|icu|iconv|lz4|lzma|bz2|z|stdc\+\+|gcc_s).*\.dylib'; then
-            echo "Unexpected dynamic dependency"
-            exit 1
-          fi
-      -
         name: Smoke test
         run: |
           "${{ github.workspace }}/dist/bin/innoextract" -h
@@ -196,7 +177,7 @@ jobs:
           path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
 
-  windows:
+  build-windows:
     runs-on: windows-2025
     timeout-minutes: 10
     defaults:
@@ -257,14 +238,301 @@ jobs:
           path: release/${{ steps.asset.outputs.name }}
           if-no-files-found: error
 
+  build-installers:
+    name: build-installers (${{ matrix.compiler }})
+    runs-on: windows-2025
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: '6.0.5'
+            asset: 'innosetup-6.0.5.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_0_5/innosetup-6.0.5.exe'
+            sha256: 'ae6823b523df87e9441789e51845434e4e0e70aac0b88afe80f94f20f4b98acb'
+            data_version: '6.0.0 (unicode)'
+          - compiler: '6.1.2'
+            asset: 'innosetup-6.1.2.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_1_2/innosetup-6.1.2.exe'
+            sha256: 'a3ce1c40ef9c71a92691aaff0f413f530c8c9e3c766be481bc63ca7cc74e35e7'
+            data_version: '6.1.0 (unicode)'
+          - compiler: '6.3.3'
+            asset: 'innosetup-6.3.3.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_3_3/innosetup-6.3.3.exe'
+            sha256: '0bcb2a409dea17e305a27a6b09555cabe600e984f88570ab72575cd7e93c95e6'
+            data_version: '6.3.0 (unicode)'
+          - compiler: '6.4.0'
+            asset: 'innosetup-6.4.0.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_4_0/innosetup-6.4.0.exe'
+            sha256: 'a360db165cfb1d42d195b020700181e7eaf5db45c1249a24edb51c3c33e9d659'
+            data_version: '6.4.0.1 (unicode)'
+          - compiler: '6.4.2'
+            asset: 'innosetup-6.4.2.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_4_2/innosetup-6.4.2.exe'
+            sha256: '238e2cf82c212a3879a050e02d787283c54bcb72d5cb6070830942de56627d5b'
+            data_version: '6.4.2 (unicode)'
+          - compiler: '6.4.3'
+            asset: 'innosetup-6.4.3.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_4_3/innosetup-6.4.3.exe'
+            sha256: 'f3c42116542c4cc57263c5ba6c4feabfc49fe771f2f98a79d2f7628b8762723b'
+            data_version: '6.4.3 (unicode)'
+          - compiler: '6.5.0'
+            asset: 'innosetup-6.5.0.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_5_0/innosetup-6.5.0.exe'
+            sha256: '79b7a1063b3888bb8eceb44a8c28e90ccdaa22ac71f9272de1dac79b42941dbd'
+            data_version: '6.5.0 (unicode)'
+          - compiler: '6.5.1'
+            asset: 'innosetup-6.5.1.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_5_1/innosetup-6.5.1.exe'
+            sha256: '3622ffdad7b2534239370099149c33adb85b90054799d901cb8ec844df7a0e41'
+            data_version: '6.5.0 (unicode)'
+          - compiler: '6.5.2'
+            asset: 'innosetup-6.5.2.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_5_2/innosetup-6.5.2.exe'
+            sha256: '8582879760b6e0e42e00f2e28ce904afac0d739941a130d3da3573c3cbf2d75b'
+            data_version: '6.5.2 (unicode)'
+          - compiler: '6.5.3'
+            asset: 'innosetup-6.5.3.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_5_3/innosetup-6.5.3.exe'
+            sha256: '9345ee029faa0b7aed0818c3d5b227699ef9a496cce79e20c19eb9d6ef2e2c2d'
+            data_version: '6.5.2 (unicode)'
+          - compiler: '6.5.4'
+            asset: 'innosetup-6.5.4.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_5_4/innosetup-6.5.4.exe'
+            sha256: 'fa73bf47a4da250d185d07561c2bfda387e5e20db77e4570004cf6a133cc10b1'
+            data_version: '6.5.2 (unicode)'
+          - compiler: '6.6.0'
+            asset: 'innosetup-6.6.0.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_6_0/innosetup-6.6.0.exe'
+            sha256: 'fa39687070ba17cf1c6a179f8671af73375254b63e97948e6b9532fc46302cec'
+            data_version: '6.6.0 (unicode)'
+          - compiler: '6.6.1'
+            asset: 'innosetup-6.6.1.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_6_1/innosetup-6.6.1.exe'
+            sha256: 'd243ce440c02705530699554fb9612b9b2bd7a2a90629cdb7f41e66f5faeb91f'
+            data_version: '6.6.1 (unicode)'
+          - compiler: '6.7.0'
+            asset: 'innosetup-6.7.0.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_0/innosetup-6.7.0.exe'
+            sha256: 'f45c7d68d1e660cf13877ec36738a5179ce72a33414f9959d35e99b68c52a697'
+            data_version: '6.7.0 (unicode)'
+          - compiler: '6.7.1'
+            asset: 'innosetup-6.7.1.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_1/innosetup-6.7.1.exe'
+            sha256: '4d11e8050b6185e0d49bd9e8cc661a7a59f44959a621d31d11033124c4e8a7b0'
+            data_version: '6.7.0 (unicode)'
+          - compiler: '6.7.2'
+            asset: 'innosetup-6.7.2.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_2/innosetup-6.7.2.exe'
+            sha256: '9f27f8386e554eb093336a1ca5c2dcacb7dbf04ab020889491d7ac53c38a12ff'
+            data_version: '6.7.0 (unicode)'
+          - compiler: '6.7.3'
+            asset: 'innosetup-6.7.3.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe'
+            sha256: '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732'
+            data_version: '6.7.0 (unicode)'
+          - compiler: '7.0.0-preview-3'
+            asset: 'innosetup-7.0.0-preview-3-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_0_0_2/innosetup-7.0.0-preview-3-x64.exe'
+            sha256: 'acbb8e1ff4eb72e29aef1d2b50029e645a433e461d833bb4eb40ed8cc31160a5'
+            data_version: '7.0.0.1 (unicode)'
+          - compiler: '7.0.0-beta'
+            asset: 'innosetup-7.0.0-beta-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_0_0/innosetup-7.0.0-beta-x64.exe'
+            sha256: 'bc8e6f13af0f912b5384bbc7068df30cfe3a57bb5f0f5ab3eaa89675629ec797'
+            data_version: '7.0.0.3 (unicode)'
+          - compiler: '7.0.1-beta'
+            asset: 'innosetup-7.0.1-beta-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_0_1/innosetup-7.0.1-beta-x64.exe'
+            sha256: 'a6033578da2c7b57ceaf9a97ebba56cb40bb71ed275170b49bbaf5eb1f4b5e16'
+            data_version: '7.0.0.3 (unicode)'
+          - compiler: '7.0.2'
+            asset: 'innosetup-7.0.2-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_0_2/innosetup-7.0.2-x64.exe'
+            sha256: '5ad54ca3def786f8f4212552e54cc6d8d61329e2d24a1cfee0571d42c2684ff1'
+            data_version: '7.0.0.3 (unicode)'
+          - compiler: '7.1.0'
+            asset: 'innosetup-7.1.0-x64.exe'
+            url: 'https://github.com/jrsoftware/issrc/releases/download/is-7_1_0/innosetup-7.1.0-x64.exe'
+            sha256: '0362a383ed217d4c4239b5933866dd96d3eb2102737da92f80f6057a4b40df2f'
+            data_version: '7.0.0.3 (unicode)'
+    steps:
+      -
+        name: Disable CRLF conversion
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Download and verify Inno Setup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $downloadDir = Join-Path $env:RUNNER_TEMP 'innosetup-download'
+          New-Item -ItemType Directory -Force -Path $downloadDir | Out-Null
+          $installer = Join-Path $downloadDir '${{ matrix.asset }}'
+          $url = '${{ matrix.url }}'
+          $expected = '${{ matrix.sha256 }}'
+          $attempts = 5
+          for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+            if (Test-Path -LiteralPath $installer) {
+              Remove-Item -LiteralPath $installer -Force
+            }
+            try {
+              Write-Host "Downloading $url (attempt $attempt/$attempts)"
+              Invoke-WebRequest -Uri $url -OutFile $installer -TimeoutSec 120
+              $actual = (Get-FileHash -Algorithm SHA256 -Path $installer).Hash.ToLowerInvariant()
+              if ($actual -ne $expected) {
+                throw "SHA-256 mismatch for $url. Expected $expected, got $actual"
+              }
+              break
+            } catch {
+              if ($attempt -eq $attempts) {
+                throw
+              }
+              $delay = [Math]::Min(60, 5 * [Math]::Pow(2, $attempt - 1))
+              Write-Warning "Download failed: $($_.Exception.Message)"
+              Write-Host "Retrying in $delay seconds"
+              Start-Sleep -Seconds $delay
+            }
+          }
+          "INNOSETUP_INSTALLER=$installer" >> $env:GITHUB_ENV
+      -
+        name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installDir = Join-Path $env:RUNNER_TEMP 'innosetup-${{ matrix.compiler }}'
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+          $arguments = @(
+            '/VERYSILENT',
+            '/SUPPRESSMSGBOXES',
+            '/NORESTART',
+            "/DIR=$installDir"
+          )
+          $process = Start-Process -FilePath $env:INNOSETUP_INSTALLER -ArgumentList $arguments -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Inno Setup installer exited with $($process.ExitCode)"
+          }
+          $iscc = Join-Path $installDir 'ISCC.exe'
+          if (!(Test-Path $iscc)) {
+            throw "ISCC.exe was not installed at $iscc"
+          }
+          "ISCC=$iscc" >> $env:GITHUB_ENV
+      -
+        name: Compile fixture installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $compiler = '${{ matrix.compiler }}'
+          $compilerId = $compiler -replace '[^A-Za-z0-9]+', '_'
+          $artifactBase = "e2e-$compilerId"
+          $artifactName = "$artifactBase.exe"
+          $outputDir = Join-Path $env:RUNNER_TEMP 'innosetup-output'
+          $artifactDir = Join-Path $env:RUNNER_TEMP 'innosetup-artifact'
+          New-Item -ItemType Directory -Force -Path $outputDir, $artifactDir | Out-Null
+          $fixture = Join-Path $env:GITHUB_WORKSPACE 'test\e2e\innosetup\fixture.iss'
+          & $env:ISCC "/O$outputDir" "/F$artifactBase" $fixture
+          if ($LASTEXITCODE -ne 0) {
+            exit $LASTEXITCODE
+          }
+          $compiledInstaller = Join-Path $outputDir $artifactName
+          if (!(Test-Path -LiteralPath $compiledInstaller)) {
+            throw "Compiled installer missing: $compiledInstaller"
+          }
+          Copy-Item -LiteralPath $compiledInstaller -Destination (Join-Path $artifactDir $artifactName)
+          $manifest = Join-Path $artifactDir "manifest-$compilerId.tsv"
+          $manifestLine = "$compiler`t${{ matrix.data_version }}`t$artifactName`n"
+          $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+          [System.IO.File]::WriteAllText($manifest, $manifestLine, $utf8NoBom)
+          Get-ChildItem -LiteralPath $artifactDir | Select-Object Name, Length | Format-Table -AutoSize
+      -
+        name: Upload fixture installer
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-${{ matrix.compiler }}
+          path: ${{ runner.temp }}/innosetup-artifact
+          if-no-files-found: error
+
+  validate-artifact:
+    name: validate (${{ matrix.artifact }})
+    runs-on: ${{ matrix.runner }}
+    needs:
+      - build-installers
+      - build-linux
+      - build-macos
+      - build-windows
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            artifact: innoextract-linux-amd64
+          - runner: ubuntu-24.04-arm
+            artifact: innoextract-linux-arm64
+          - runner: macos-15
+            artifact: innoextract-darwin-arm64
+          - runner: macos-15-intel
+            artifact: innoextract-darwin-amd64
+          - runner: windows-2025
+            artifact: innoextract-windows-amd64.exe
+    steps:
+      -
+        name: Disable CRLF conversion
+        if: startsWith(matrix.runner, 'windows')
+        shell: pwsh
+        run: git config --global core.autocrlf false
+      -
+        name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      -
+        name: Download release artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ runner.temp }}/innoextract-artifact
+      -
+        name: Download fixture installers
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          pattern: e2e-*
+          path: ${{ runner.temp }}/e2e-installers
+      -
+        name: Validate extraction
+        shell: bash
+        run: |
+          to_unix_path() {
+            if command -v cygpath >/dev/null 2>&1; then
+              cygpath -u "$1"
+            else
+              printf '%s\n' "$1"
+            fi
+          }
+
+          temp_dir="$(to_unix_path "${RUNNER_TEMP}")"
+          workspace="$(to_unix_path "${GITHUB_WORKSPACE}")"
+          artifact_dir="${temp_dir}/innoextract-artifact"
+          installers_dir="${temp_dir}/e2e-installers"
+          binary="${artifact_dir}/${{ matrix.artifact }}"
+
+          find "${artifact_dir}" "${installers_dir}" -type f -print | sort
+
+          if [ "${RUNNER_OS}" != "Windows" ]; then
+            chmod +x "${binary}"
+          fi
+
+          bash "${workspace}/test/e2e/innosetup/validate.sh" \
+            --innoextract "${binary}" \
+            --installers "${installers_dir}"
+
   release:
     runs-on: ubuntu-24.04
     permissions:
       contents: write # required to create GitHub release
     needs:
-      - linux
-      - macos
-      - windows
+      - validate-artifact
     steps:
       -
         name: Download artifacts

@@ -45,33 +45,34 @@ The default build settings are tuned for users - if you plan to make changes to 
 
 ### Build options:
 
-| Option                    | Default   | Description |
-|:------------------------- |:---------:|:----------- |
-| `BUILD_DECRYPTION`        | `ON`      | Build decryption support.
-| `USE_LZMA`                | `ON`      | Use `liblzma`.
-| `WITH_CONV`               | *not set* | The charset conversion library to use. Valid values are `iconv`, `win32` and `builtin`¹. If not set, a library appropriate for the target platform will be chosen.
-| `CMAKE_BUILD_TYPE`        | `Release` | Set to `Debug` to enable debug output.
-| `DEBUG`                   | `OFF`²    | Enable debug output and runtime checks.
-| `DEBUG_EXTRA`             | `OFF`     | Expensive debug options.
-| `SET_WARNING_FLAGS`       | `ON`      | Adjust compiler warning flags. This should not affect the produced binaries but is useful to catch potential problems.
-| `SET_NOISY_WARNING_FLAGS` | `OFF`     | Enable warnings with false positives many cases that still need to be fixed.
-| `SET_OPTIMIZATION_FLAGS`  | `ON`      | Adjust compiler optimization flags.
-| `CXX_STD_VERSION`         | `2017`    | Maximum C++ standard version to enable.
-| `USE_DYNAMIC_UTIMENSAT`   | `OFF`     | Dynamically load utimensat(2) if not available at compile time.
-| `USE_STATIC_LIBS`         | `OFF`³    | Turns on static linking for all libraries, using `-static` with MinGW and `-static-libgcc` / `-static-libstdc++` with other GCC-like toolchains. You can also use the individual options below:
-| `LZMA_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `liblzma`.
-| `Boost_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link Boost. See also `FindBoost.cmake`.
-| `ZLIB_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `libz`. (used via Boost)
-| `BZip2_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link `libbz2`. (used via Boost)
-| `iconv_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link `libiconv`.
-| `STRICT_USE`              | `OFF`     | Abort if there are missing optional dependencies.
-| `DEVELOPER`               | `OFF`     | Enable build options suitable for developers⁵.
-| `FASTLINK`                | `OFF`⁶    | Optimize for link speed.
-| `USE_LTO`                 | `ON`²     | Use link-time code generation.
-| `USE_LD`                  | `best`⁸   | Linker to use - `default`, `mold`, `lld`, `gold`, `bfd` or `best`
-| `BUILD_TESTS`             | `OFF`⁶    | Build unit tests that can be run using `make check`
-| `RUN_TESTS`               | `OFF`⁷    | Automatically run tests
-| `RUN_TARGET`              | (none)    | Wrapper to run binaries produced in the build process
+| Option                    | Default   | Description                                                                                                                                                                                     |
+|---------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `BUILD_DECRYPTION`        | `ON`      | Build decryption support.                                                                                                                                                                       |
+| `USE_LZMA`                | `ON`      | Use `liblzma`.                                                                                                                                                                                  |
+| `WITH_CONV`               | *not set* | The charset conversion library to use. Valid values are `iconv`, `win32` and `builtin`¹. If not set, a library appropriate for the target platform will be chosen.                              |
+| `CMAKE_BUILD_TYPE`        | `Release` | Set to `Debug` to enable debug output.                                                                                                                                                          |
+| `DEBUG`                   | `OFF`²    | Enable debug output and runtime checks.                                                                                                                                                         |
+| `DEBUG_EXTRA`             | `OFF`     | Expensive debug options.                                                                                                                                                                        |
+| `SET_WARNING_FLAGS`       | `ON`      | Adjust compiler warning flags. This should not affect the produced binaries but is useful to catch potential problems.                                                                          |
+| `SET_NOISY_WARNING_FLAGS` | `OFF`     | Enable warnings with false positives many cases that still need to be fixed.                                                                                                                    |
+| `SET_OPTIMIZATION_FLAGS`  | `ON`      | Adjust compiler optimization flags.                                                                                                                                                             |
+| `CXX_STD_VERSION`         | `2017`    | Maximum C++ standard version to enable.                                                                                                                                                         |
+| `USE_DYNAMIC_UTIMENSAT`   | `OFF`     | Dynamically load utimensat(2) if not available at compile time.                                                                                                                                 |
+| `USE_STATIC_LIBS`         | `OFF`³    | Turns on static linking for all libraries, using `-static` with MinGW and `-static-libgcc` / `-static-libstdc++` with other GCC-like toolchains. You can also use the individual options below: |
+| `LZMA_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `liblzma`.                                                                                                                                                                      |
+| `Boost_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link Boost. See also `FindBoost.cmake`.                                                                                                                                              |
+| `ZLIB_USE_STATIC_LIBS`    | `OFF`⁴    | Statically link `libz`. (used via Boost)                                                                                                                                                        |
+| `BZip2_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link `libbz2`. (used via Boost)                                                                                                                                                      |
+| `iconv_USE_STATIC_LIBS`   | `OFF`⁴    | Statically link `libiconv`.                                                                                                                                                                     |
+| `STRICT_USE`              | `OFF`     | Abort if there are missing optional dependencies.                                                                                                                                               |
+| `DEVELOPER`               | `OFF`     | Enable build options suitable for developers⁵.                                                                                                                                                  |
+| `FASTLINK`                | `OFF`⁶    | Optimize for link speed.                                                                                                                                                                        |
+| `USE_LTO`                 | `ON`²     | Use link-time code generation.                                                                                                                                                                  |
+| `USE_LD`                  | `best`⁸   | Linker to use - `default`, `mold`, `lld`, `gold`, `bfd` or `best`                                                                                                                               |
+| `BUILD_TESTS`             | `OFF`⁶    | Build unit tests that can be run using `make check`                                                                                                                                             |
+| `RUN_TESTS`               | `OFF`⁷    | Automatically run tests                                                                                                                                                                         |
+| `RUN_TARGET`              | (none)    | Wrapper to run binaries produced in the build process                                                                                                                                           |
+
 1. The builtin charset conversion only supports Windows-1252 and UTF-16LE. This is normally enough for filenames, but custom message strings (which can be included in filenames) may use arbitrary encodings.
 2. Enabled automatically if `CMAKE_BUILD_TYPE` is set to `Debug`.
 3. Under Windows, the default is `ON`.
@@ -83,12 +84,12 @@ The default build settings are tuned for users - if you plan to make changes to 
 
 Install options:
 
-| Option                      | Default              | Description |
-|:--------------------------- |:--------------------:|:----------- |
-| `CMAKE_INSTALL_PREFIX`      | `/usr/local`         | Where to install innoextract.
-| `CMAKE_INSTALL_BINDIR`      | `bin`                | Location for binaries (relative to prefix).
-| `CMAKE_INSTALL_DATAROOTDIR` | `share`              | Location for data files (relative to prefix).
-| `CMAKE_INSTALL_MANDIR`      | `${DATAROOTDIR}/man` | Location for man pages (relative to prefix).
+| Option                      | Default              | Description                                   |
+|-----------------------------|----------------------|-----------------------------------------------|
+| `CMAKE_INSTALL_PREFIX`      | `/usr/local`         | Where to install innoextract.                 |
+| `CMAKE_INSTALL_BINDIR`      | `bin`                | Location for binaries (relative to prefix).   |
+| `CMAKE_INSTALL_DATAROOTDIR` | `share`              | Location for data files (relative to prefix). |
+| `CMAKE_INSTALL_MANDIR`      | `${DATAROOTDIR}/man` | Location for man pages (relative to prefix).  |
 
 Set options by passing `-D<option>=<value>` to cmake.
 

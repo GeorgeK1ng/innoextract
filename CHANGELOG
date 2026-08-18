@@ -1,4 +1,11 @@
 
+innoextract 1.13.0 (2026-08-18)
+ - Fixed printing SHA-256 checksums to use the stored SHA-256 digest instead of SHA-1 bytes
+ - Fixed collision rename suffixes so component and language expressions containing path separators cannot create nested output paths
+ - Fixed processing installers without files to avoid evaluating log(0)
+ - Fixed MinGW static Boost builds with LTO enabled
+ - Updated build documentation to stop listing Boost.System as a required Boost library
+
 innoextract 1.12.0 (2026-08-17)
  - Fixed checksum handling for Inno Setup 6.5+ file entries that do not use SHA-256 hash verification
  - Fixed release binaries to be self-contained by statically linking third-party dependencies on Linux, macOS and Windows

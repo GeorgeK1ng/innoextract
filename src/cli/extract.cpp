@@ -749,8 +749,11 @@ processed_entries filter_entries(const extract_options & o, const setup::info & 
 	#endif
 	
 	#if BOOST_VERSION >= 104800
-	processed.directories.reserve(info.directories.size()
-	                              + size_t(std::log(double(info.files.size()))));
+	size_t directory_capacity = info.directories.size();
+	if(!info.files.empty()) {
+		directory_capacity += size_t(std::log(double(info.files.size())));
+	}
+	processed.directories.reserve(directory_capacity);
 	#endif
 	
 	CollisionMap collisions;

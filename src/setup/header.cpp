@@ -246,6 +246,15 @@ void header::load(std::istream & is, const version & version) {
 		app_readme_file.clear(), app_contact.clear();
 		app_comments.clear(), app_modify_path.clear();
 	}
+	if(version.is_air()) {
+		// AiR's Inno Setup 5.2.0 variant inserts two binary strings
+		// (observed as the skin and music filenames) after AppModifyPath.
+		// Consume them here so LeadBytes and the following entry counts
+		// remain aligned with the stock Inno Setup 5.2.0 layout.
+		std::string air_extra;
+		is >> util::binary_string(air_extra);
+		is >> util::binary_string(air_extra);
+	}
 	if(version >= INNO_VERSION(5, 3, 8)) {
 		is >> util::binary_string(create_uninstall_registry_key);
 	} else {

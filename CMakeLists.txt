@@ -562,6 +562,7 @@ if(MINGW AND USE_LTO AND Boost_USE_STATIC_LIBS AND CMAKE_CXX_COMPILER_ID STREQUA
 	# GCC/MinGW LTO may discard COMDAT/linkonce thunks emitted for Boost
 	# exceptions/wrapexcept, causing "defined in discarded section" link errors.
 	set_source_files_properties(
+		src/cli/debug.cpp
 		src/cli/main.cpp
 		src/cli/extract.cpp
 		src/cli/goggalaxy.cpp

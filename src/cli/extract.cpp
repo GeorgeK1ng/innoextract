@@ -533,6 +533,12 @@ bool insert_dirs(DirectoriesMap & processed_directories, const path_filter & inc
 	return false;
 }
 
+std::string sanitize_collision_suffix(std::string suffix) {
+	std::replace(suffix.begin(), suffix.end(), '\\', '$');
+	std::replace(suffix.begin(), suffix.end(), '/', '$');
+	return suffix;
+}
+
 bool rename_collision(const extract_options & o, FilesMap & processed_files, const std::string & path,
                       const processed_file & other, bool common_component, bool common_language,
                       bool common_arch, bool first) {
@@ -546,14 +552,14 @@ bool rename_collision(const extract_options & o, FilesMap & processed_files, con
 	if(!common_component && !file.components.empty()) {
 		if(setup::is_simple_expression(file.components)) {
 			require_number_suffix = false;
-			oss << '#' << file.components;
+			oss << '#' << sanitize_collision_suffix(file.components);
 		}
 	}
 	if(!common_language && !file.languages.empty()) {
 		if(setup::is_simple_expression(file.languages)) {
 			require_number_suffix = false;
 			if(file.languages != o.default_language) {
-				oss << '@' << file.languages;
+				oss << '@' << sanitize_collision_suffix(file.languages);
 			}
 		}
 	}

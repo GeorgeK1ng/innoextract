@@ -139,6 +139,7 @@ const known_version versions[] = {
 	{ "Inno Setup Setup Data (5.1.10)",                     INNO_VERSION_EXT(5, 1, 10, 0), 0 },
 	{ "Inno Setup Setup Data (5.1.13)",                     INNO_VERSION_EXT(5, 1, 13, 0), 0 },
 	{ "Inno Setup Setup Data (5.2.0)",                      INNO_VERSION_EXT(5, 2,  0, 0), 0 },
+	{ "AiR Setup Setup Data (5.2.0)",                       INNO_VERSION_EXT(5, 2,  0, 0), version::Air },
 	{ "Inno Setup Setup Data (5.2.1)",                      INNO_VERSION_EXT(5, 2,  1, 0), 0 },
 	{ "Inno Setup Setup Data (5.2.3)",                      INNO_VERSION_EXT(5, 2,  3, 0), 0 },
 	{ "Inno Setup Setup Data (5.2.5)",                      INNO_VERSION_EXT(5, 2,  5, 0), 0 },
@@ -216,6 +217,10 @@ std::ostream & operator<<(std::ostream & os, const version & version) {
 	
 	if(version.is_isx()) {
 		os << " (isx)";
+	}
+	
+	if(version.is_air()) {
+		os << " (air)";
 	}
 	
 	return os;

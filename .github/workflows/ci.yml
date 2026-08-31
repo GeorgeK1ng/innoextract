@@ -180,6 +180,20 @@ jobs:
   build-windows:
     runs-on: windows-2025
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          -
+            arch: amd64
+            msystem: MINGW64
+            package_prefix: mingw-w64-x86_64
+            artifact: innoextract-windows-amd64.exe
+          -
+            arch: x86
+            msystem: MINGW32
+            package_prefix: mingw-w64-i686
+            artifact: innoextract-windows-x86.exe
     defaults:
       run:
         shell: msys2 {0}
@@ -193,17 +207,17 @@ jobs:
         name: Dependencies
         uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0
         with:
-          msystem: MINGW64
+          msystem: ${{ matrix.msystem }}
           update: true
           install: >-
             git
-            mingw-w64-x86_64-boost
-            mingw-w64-x86_64-bzip2
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-ninja
-            mingw-w64-x86_64-xz
-            mingw-w64-x86_64-zlib
+            ${{ matrix.package_prefix }}-boost
+            ${{ matrix.package_prefix }}-bzip2
+            ${{ matrix.package_prefix }}-cmake
+            ${{ matrix.package_prefix }}-gcc
+            ${{ matrix.package_prefix }}-ninja
+            ${{ matrix.package_prefix }}-xz
+            ${{ matrix.package_prefix }}-zlib
       -
         name: Configure
         run: cmake --version && cmake -B "${GITHUB_WORKSPACE}/build" -G Ninja -Werror=author -Werror=deprecated -DCONTINUOUS_INTEGRATION=1 -DRUN_TESTS=OFF
@@ -226,7 +240,7 @@ jobs:
         name: Prepare release binary
         id: asset
         run: |
-          name="innoextract-windows-amd64.exe"
+          name="${{ matrix.artifact }}"
           mkdir -p release
           cp "${GITHUB_WORKSPACE}/dist/bin/innoextract.exe" "release/${name}"
           echo "name=${name}" >> "${GITHUB_OUTPUT}"
